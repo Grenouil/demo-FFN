@@ -118,7 +118,7 @@ card_carac_swimmer = dbc.Card(
             ]),
             html.Br()
         ], className="border-start border-dark border-5"
-    ), style={"width": "23rem","background":"#FECEE3"},
+    ), style={"width": "23rem","background":'#fdd7d4'},
     className="text-center m-4 ml-3"
 )
 
@@ -147,7 +147,7 @@ card_carac_compet = dbc.Card(
                 ], width=8),
             ])
         ], className="border-start border-dark border-5"
-    ), style={"width": "32rem","background":"#FE9FC9"},
+    ), style={"width": "32rem","background":'#fbacb9',},
     className="text-center m-4 ml-3"
 )
 
@@ -186,7 +186,7 @@ card_carac_event = dbc.Card(
                 ], width=8),
             ], justify='center')
         ], className="border-start border-dark border-5"
-    ), style={"width": "32rem","background":"#FE70AF"},
+    ), style={"width": "32rem","background":'#f767a1'},
     className="text-center m-4 ml-3"
 )
 
@@ -299,11 +299,11 @@ layout = dbc.Container([
     
     dbc.Row([
         dbc.Col([
-            dbc.Button([csv_icon, "Télécharger la base de données sous format .csv"], id="btn_csv", style={'background-color':'#FE70AF'}),
+            dbc.Button([csv_icon, "Télécharger la base de données sous format .csv"], id="btn_csv", style={'background-color':'#cd238f'}),
             dcc.Download(id="download-dataframe-csv"),
         ], width={"size": 'auto'}),
         dbc.Col([
-            dbc.Button([excel_icon, "Télécharger la base de données sous format .xlsx"], id="btn_excel", style={'background-color':'#FE70AF'}),
+            dbc.Button([excel_icon, "Télécharger la base de données sous format .xlsx"], id="btn_excel", style={'background-color':'#cd238f'}),
             dcc.Download(id="download-dataframe-xlsx"),
         ],  width={"size": 'auto', "offset": 0})
     ])
@@ -362,7 +362,7 @@ def update_dropdown_options(nom_prenom_v, competition_nom_v, distance_course_v, 
         editable=True,
         style_cell={'textAlign': 'center'},
         style_header={
-            'backgroundColor': '#FE70AF',
+            'backgroundColor': '#f767a1',
             'color': 'white',
             'fontWeight': 'bold'
         },
