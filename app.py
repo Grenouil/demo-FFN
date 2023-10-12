@@ -16,17 +16,17 @@ app.css.append_css({
 
 ###################### Pré-traitement des données #########################
 
-df = pd.read_csv("data/Freq_amp_base_entiere_date.csv", dtype = {'id_analyse':int, 'nom_analyse':str, 'nom_prenom':str, 'nageur_sexe':str, 'competition_nom':str, 'mois_annee':str, 'date':str, 'distance_course':str, 'round':str, 'style_nage':str, 'temps_final':float, 'id_cycle':float, 'temps':float, 'distance':float, 'frequence_instantanee':float, 'amplitude_instantanee':float})
-liste_columns = df.columns
-df = df[~df['distance_course'].astype(str).str.contains('x')].reset_index(drop=True)
-df.distance_course = df.distance_course.astype(int)
-df = df.dropna(subset=['nom_prenom']).reset_index(drop=True)
+# df = pd.read_csv("data/Freq_amp_base_entiere_date.csv", dtype = {'id_analyse':int, 'nom_analyse':str, 'nom_prenom':str, 'nageur_sexe':str, 'competition_nom':str, 'mois_annee':str, 'date':str, 'distance_course':str, 'round':str, 'style_nage':str, 'temps_final':float, 'id_cycle':float, 'temps':float, 'distance':float, 'frequence_instantanee':float, 'amplitude_instantanee':float})
+# liste_columns = df.columns
+# df = df[~df['distance_course'].astype(str).str.contains('x')].reset_index(drop=True)
+# df.distance_course = df.distance_course.astype(int)
+# df = df.dropna(subset=['nom_prenom']).reset_index(drop=True)
 
-mini_df = df.loc[df.temps_final>0,['id_analyse', 'temps_final']].reset_index(drop=True)
-df = df.drop(columns=['temps_final'],axis=1)
-df = df.merge(mini_df, on = 'id_analyse')
-df = df[liste_columns]
-df = df.rename(columns={'round': 'round_name'})
+# mini_df = df.loc[df.temps_final>0,['id_analyse', 'temps_final']].reset_index(drop=True)
+# df = df.drop(columns=['temps_final'],axis=1)
+# df = df.merge(mini_df, on = 'id_analyse')
+# df = df[liste_columns]
+# df = df.rename(columns={'round': 'round_name'})
 
 thicker_hr_style = {
     'border-top': '5px solid black',
