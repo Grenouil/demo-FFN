@@ -8,9 +8,14 @@ import numpy as np
 from functools import reduce
 #from app import df
 
-dash.register_page(__name__)
+dash.register_page(__name__, name=[DashIconify(icon="mdi:database-search", style={"marginRight": 8}), "Parcourir les données brutes"])
 
 ###################### Pré-traitement des données #########################
+csv_icon = DashIconify(icon="fa6-solid:file-csv", style={"marginRight": 5})
+excel_icon = DashIconify(icon="file-icons:microsoft-excel", style={"marginRight": 5})
+database_icon = DashIconify(icon="mdi:database-search", style={"marginRight": 5})
+reset_brutes_icon = DashIconify(icon="grommet-icons:power-reset", style={"marginRight": 5})
+
 df = pd.read_csv("data/Freq_amp_base_entiere_date.csv", dtype = {'id_analyse':int, 'nom_analyse':str, 'nom_prenom':str, 'nageur_sexe':str, 'competition_nom':str, 'mois_annee':str, 'date':str, 'distance_course':str, 'round':str, 'style_nage':str, 'temps_final':float, 'id_cycle':float, 'temps':float, 'distance':float, 'frequence_instantanee':float, 'amplitude_instantanee':float})
 liste_columns = df.columns
 df = df[~df['distance_course'].astype(str).str.contains('x')].reset_index(drop=True)
@@ -24,26 +29,14 @@ df = df[liste_columns]
 df = df.rename(columns={'round': 'round_name'})
 df = df.drop('mois_annee',axis=1)
 df['temps_final'] = df['temps_final'].apply(lambda x: '{:02d}:{:05.2f}'.format(int(float(x) // 60), float(x) % 60))
+df['distance'] = df['distance'].round(1)
+df['frequence_instantanee'] = df['frequence_instantanee'].round(1)
+df['amplitude_instantanee'] = df['amplitude_instantanee'].round(1)
+
 
 def comparer_noms(nom):
     return nom.split()[-1]
 
-# print('chargement données page 1 : ', np.round(time.time()-t, 2))
-# t = time.time()
-
-# liste_id = [x for x in sorted(df.id_analyse.unique())]
-# liste_noms_analye = [x for x in sorted(df.nom_analyse.unique())]
-# liste_noms_prenoms = [x for x in pd.Series(sorted((df['nom_prenom']), key=comparer_noms)).unique()]
-# liste_competitions_noms = [x for x in sorted(df.competition_nom.unique())]
-# liste_distances_courses = [x for x in sorted(df.distance_course.unique())]
-# liste_round_name = [x for x in sorted(df.round_name.unique())]
-# liste_style_nage = [x for x in sorted(df.style_nage.unique())]
-# liste_sexes = [x for x in sorted(df.nageur_sexe.unique())]
-
-# print('listes dropdowns : ', np.round(time.time()-t, 2))
-
-csv_icon = DashIconify(icon="fa6-solid:file-csv", style={"marginRight": 5})
-excel_icon = DashIconify(icon="file-icons:microsoft-excel", style={"marginRight": 5})
 
 
 ###################### Définition des cards #########################
@@ -194,18 +187,18 @@ card_carac_event = dbc.Card(
 ####################### Layout ######################
 layout = dbc.Container([
     dbc.Row([
-        dbc.Col([
-            html.H2(children='')
-        ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
+        # dbc.Col([
+        #     html.H2(children='')
+        # ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
         
         dbc.Col(
-                html.H1(children='Parcourir les données brutes'),
-                width={"size": 'auto', "offset": 0}, style={"fontSize": 30, "textAlign": 'center'}
+                html.H1([DashIconify(icon = "mdi:database-search", style={"marginRight": 30}),'Parcourir les données brutes']),
+                width={"size": 'auto', "offset": 1}, style={"fontSize": 30, "textAlign": 'center'}
             ),
         
-        dbc.Col([
-            html.H2(children='')
-        ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
+    #     dbc.Col([
+    #         html.H2(children='')
+    #     ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
     ]),
     
     dbc.Row(
@@ -214,6 +207,16 @@ layout = dbc.Container([
     
     dbc.Row(
         [dbc.Col(card_carac_event, width={"offset": 2}),
+    ]),
+    
+    html.Br(),
+    
+    dbc.Row([
+        dbc.Col([
+            dbc.Button(
+            [reset_brutes_icon, "Actualiser la base de données "], id="reset-brutes-button", className="me-2", n_clicks=0, style={'background-color': 'black'}
+            ),
+    ],  width={"size": 'auto', "offset": 4})
     ]),
     
     # dbc.Row([
@@ -291,8 +294,26 @@ layout = dbc.Container([
     
     html.Br(),
     
+    dcc.Store(id = 'df-stored-table'),
+    
     dbc.Row(
-        html.Div(id='bdd_table'),
+        html.Div(dash_table.DataTable(
+            columns=[],
+            id='bdd-table',
+            page_size=10,
+            editable=True,
+            style_cell={'textAlign': 'center'},
+            style_header={
+                'backgroundColor': '#f767a1',
+                'color': 'white',
+                'fontWeight': 'bold'
+            },
+            style_data={
+                'width': '100px', 'minWidth': '100px', 'maxWidth': '100px',
+                'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+            }
+        )),
     ),
     
     html.Br(),
@@ -311,118 +332,7 @@ layout = dbc.Container([
 ])
 
 
-####################### Callbacks ######################     
-@callback(
-    Output('bdd_table', 'children'),
-    [#Input('id-course-dropdown', 'value'),
-     #Input('nom-analyse-dropdown', 'value'),
-     Input('nom-prenom-dropdown', 'value'),
-     Input('nom-competition-dropdown', 'value'),
-     Input('distance-course-dropdown', 'value'),
-     Input('round-name-dropdown', 'value'),
-     Input('style-nage-dropdown', 'value'),
-     Input('sexe-dropdown', 'value'),
-     Input('date-dropdown', 'value')]
-)
-def update_dropdown_options(nom_prenom_v, competition_nom_v, distance_course_v, epreuve_v, nage_v, sexe_v, date_v):
-    #t1 = time.time()
-    dff = df.copy()
-
-    # if id_analyse_v:
-    #     dff = dff.loc[dff.id_analyse.isin(id_analyse_v)]
-    
-    # if nom_analyse_v:
-    #     dff = dff.loc[dff.nom_analyse.isin(nom_analyse_v)]
-        
-    if nom_prenom_v:
-        dff = dff.loc[dff.nom_prenom.isin(nom_prenom_v)]
-        
-    if competition_nom_v:
-        dff = dff.loc[dff.competition_nom.isin(competition_nom_v)]
-        
-    if distance_course_v:
-        dff = dff.loc[dff.distance_course.isin(distance_course_v)]
-        
-    if epreuve_v:
-        dff = dff.loc[dff.round_name.isin(epreuve_v)]
-        
-    if nage_v:
-        dff = dff.loc[dff.style_nage.isin(nage_v)]
-        
-    if sexe_v:
-        dff = dff.loc[dff.nageur_sexe.isin(sexe_v)]
-        
-    if date_v:
-        dff = dff.loc[dff.date.isin(date_v)]
-    
-    return dash_table.DataTable(
-        columns=[{'name': str(column), 'id': str(column)} for column in dff.columns],
-        data=dff.iloc[:10000,:].to_dict('records'),
-        page_size=10,
-        editable=True,
-        style_cell={'textAlign': 'center'},
-        style_header={
-            'backgroundColor': '#f767a1',
-            'color': 'white',
-            'fontWeight': 'bold'
-        },
-        style_data={
-            'width': '100px', 'minWidth': '100px', 'maxWidth': '100px',
-            'overflow': 'hidden',
-            'textOverflow': 'ellipsis',
-        }
-    )
-
-
-@callback(
-    Output("download-dataframe-csv", "data"),
-    Input("btn_csv","n_clicks"),
-    Input("btn_excel","n_clicks"),
-    #Input('id-course-dropdown', 'value'),
-    #Input('nom-analyse-dropdown', 'value'),
-    Input('nom-prenom-dropdown', 'value'),
-    Input('nom-competition-dropdown', 'value'),
-    Input('distance-course-dropdown', 'value'),
-    Input('round-name-dropdown', 'value'),
-    Input('style-nage-dropdown', 'value'),
-    Input('sexe-dropdown', 'value'),
-    prevent_initial_call=True,
-)
-def func(btn_csv_clicks, btn_excel_clicks, nom_prenom_v, competition_nom_v, distance_course_v, epreuve_v, nage_v, sexe_v):
-    dff = df.copy()
-    
-    # if id_analyse_v:
-    #     dff = dff.loc[dff.id_analyse.isin(id_analyse_v)]
-    
-    # if nom_analyse_v:
-    #     dff = dff.loc[dff.nom_analyse.isin(nom_analyse_v)]
-        
-    if nom_prenom_v:
-        dff = dff.loc[dff.nom_prenom.isin(nom_prenom_v)]
-        
-    if competition_nom_v:
-        dff = dff.loc[dff.competition_nom.isin(competition_nom_v)]
-        
-    if distance_course_v:
-        dff = dff.loc[dff.distance_course.isin(distance_course_v)]
-        
-    if epreuve_v:
-        dff = dff.loc[dff.round_name.isin(epreuve_v)]
-        
-    if nage_v:
-        dff = dff.loc[dff.style_nage.isin(nage_v)]
-        
-    if sexe_v:
-        dff = dff.loc[dff.nageur_sexe.isin(sexe_v)]
-        
-    if "btn_csv" == ctx.triggered_id:
-        return dcc.send_data_frame(dff.to_csv, "FFN_app_bdd.csv")
-    
-    if "btn_excel" == ctx.triggered_id:
-        return dcc.send_data_frame(dff.to_excel, "FFN_app_bdd.xlsx", sheet_name="Feuille_1")
-    
-
-
+####################### Callbacks ######################
 @callback(
     Output('nom-competition-dropdown', "options"),
     Input('nom-prenom-dropdown',"value"),
@@ -500,3 +410,133 @@ def update_round(nom_prenom,distance):
     if distance:
         dff = dff.loc[dff.distance_course.isin(distance)]
     return [{'label': i, 'value': i} for i in sorted(dff.round_name.unique())]
+
+
+
+
+     
+@callback(
+    Output('bdd-table', 'data'),
+    Output('df-stored-table', "data"),
+    [
+        # Input('id-course-dropdown', 'value'),
+        # Input('nom-analyse-dropdown', 'value'),
+        Input('nom-prenom-dropdown', 'value'),
+        Input('nom-competition-dropdown', 'value'),
+        Input('distance-course-dropdown', 'value'),
+        Input('round-name-dropdown', 'value'),
+        Input('style-nage-dropdown', 'value'),
+        Input('sexe-dropdown', 'value'),
+        Input('date-dropdown', 'value'),
+        Input('reset-brutes-button', "n_clicks")
+    ]
+)
+def display_table(nom_prenom_v, competition_nom_v, distance_course_v, epreuve_v, nage_v, sexe_v, date_v, reset_btn):
+    dff = pd.DataFrame()
+    dff_stored = pd.DataFrame()
+
+    if "reset-brutes-button" in ctx.triggered[0]['prop_id']:
+        dff = df.copy()
+        if nom_prenom_v:
+            dff = dff.loc[dff.nom_prenom.isin(nom_prenom_v)]
+            
+        if competition_nom_v:
+            dff = dff.loc[dff.competition_nom.isin(competition_nom_v)]
+            
+        if distance_course_v:
+            dff = dff.loc[dff.distance_course.isin(distance_course_v)]
+            
+        if epreuve_v:
+            dff = dff.loc[dff.round_name.isin(epreuve_v)]
+            
+        if nage_v:
+            dff = dff.loc[dff.style_nage.isin(nage_v)]
+            
+        if sexe_v:
+            dff = dff.loc[dff.nageur_sexe.isin(sexe_v)]
+            
+        if date_v:
+            dff = dff.loc[dff.date.isin(date_v)]
+            
+            
+        dff = dff.drop(columns = 'competition_nom', axis=1)
+        dff = dff.rename(columns={'id_analyse': 'ID', 'nom_analyse': 'ID complet (distance, nage, épreuve, compétition)',
+                                'nom_prenom' : 'Nom & prénom du nageur', 'nageur_sexe': 'Sexe', 'distance_course': 'Distance',
+                                'round_name': 'Epreuve', 'style_nage': 'Nage', 'temps_final': 'Temps final', 'id_cycle': 'ID cycle', 
+                                'frequence_instantanee': 'Fréquence instantannée', 'amplitude_instantanee': 'Amplitude instantanée'}
+                        )
+
+        if dff.shape[0] > 10000:
+            dff = dff.iloc[:10000,:]
+            
+        dff_stored = dff.copy()
+        dff_stored = dff_stored.to_dict('records')
+        return dff_stored, dff.to_dict('records')  # Convertissez dff en liste de dictionnaires
+        
+    return dff_stored.to_dict('records'), dff_stored.to_dict('records')  # Assurez-vous que les sorties sont toujours des listes de dictionnaires
+
+
+
+@callback(
+    Output('bdd-table', 'columns'),
+    [Input('df-stored-table', 'data')],
+)
+
+def update_columns(data):
+    if data is not None:
+        # Récupérez les colonnes du DataFrame
+        df_columns = pd.DataFrame(data).columns
+        # Créez une liste de colonnes au format attendu par dash_table.DataTable
+        columns = [{'name': str(column), 'id': str(column)} for column in df_columns]
+        return columns
+    # Si aucune donnée n'est disponible, utilisez une liste vide pour les colonnes
+    return []
+
+
+@callback(
+    Output("download-dataframe-csv", "data"),
+    Input("btn_csv","n_clicks"),
+    Input("btn_excel","n_clicks"),
+    #Input('id-course-dropdown', 'value'),
+    #Input('nom-analyse-dropdown', 'value'),
+    Input('nom-prenom-dropdown', 'value'),
+    Input('nom-competition-dropdown', 'value'),
+    Input('distance-course-dropdown', 'value'),
+    Input('round-name-dropdown', 'value'),
+    Input('style-nage-dropdown', 'value'),
+    Input('sexe-dropdown', 'value'),
+    prevent_initial_call=True,
+)
+def func(btn_csv_clicks, btn_excel_clicks, nom_prenom_v, competition_nom_v, distance_course_v, epreuve_v, nage_v, sexe_v):
+    dff = df.copy()
+    
+    # if id_analyse_v:
+    #     dff = dff.loc[dff.id_analyse.isin(id_analyse_v)]
+    
+    # if nom_analyse_v:
+    #     dff = dff.loc[dff.nom_analyse.isin(nom_analyse_v)]
+        
+    if nom_prenom_v:
+        dff = dff.loc[dff.nom_prenom.isin(nom_prenom_v)]
+        
+    if competition_nom_v:
+        dff = dff.loc[dff.competition_nom.isin(competition_nom_v)]
+        
+    if distance_course_v:
+        dff = dff.loc[dff.distance_course.isin(distance_course_v)]
+        
+    if epreuve_v:
+        dff = dff.loc[dff.round_name.isin(epreuve_v)]
+        
+    if nage_v:
+        dff = dff.loc[dff.style_nage.isin(nage_v)]
+        
+    if sexe_v:
+        dff = dff.loc[dff.nageur_sexe.isin(sexe_v)]
+        
+    if "btn_csv" == ctx.triggered_id:
+        return dcc.send_data_frame(dff.to_csv, "FFN_app_bdd.csv")
+    
+    if "btn_excel" == ctx.triggered_id:
+        return dcc.send_data_frame(dff.to_excel, "FFN_app_bdd.xlsx", sheet_name="Feuille_1")
+    

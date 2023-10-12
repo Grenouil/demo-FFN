@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 from datetime import datetime
 #from app import df
 
-dash.register_page(__name__)
+dash.register_page(__name__, name=[DashIconify(icon="ri:pin-distance-fill", style={"marginRight": 8}), "Parcourir les données par section"])
 
 ###################### Pré-traitement des données #########################
 df_section = pd.read_csv("data/Base_parties_nagees.csv", dtype = {'id_analyse':int, 'nom_analyse':str, 'nom_prenom':str, 'nageur_sexe':str, 'competition_nom':str, 'mois_annee':str, 'distance_course':int, 'style_nage':str, 'round':str, 'temps_final':float,  'temps_reaction':float, 'temps_vol':float, 'temps_depart':float, 'TEMPS_SECTION':str, 'VITESSE':str, 'NB_CYCLE': str, 'FREQUENCE': str, 'TEMPO': str, 'AMPLITUDE': str})
@@ -20,6 +20,8 @@ reset_section_icon = DashIconify(icon="grommet-icons:power-reset", style={"margi
 csv_section_icon = DashIconify(icon="fa6-solid:file-csv", style={"marginRight": 5})
 excel_section_icon = DashIconify(icon="file-icons:microsoft-excel", style={"marginRight": 5})
 graph_section_icon = DashIconify(icon="mdi:graph-line", style={"marginRight": 5})
+selectall_section_icon = DashIconify(icon="fluent:select-all-on-24-filled", style={"marginRight": 5})
+deselectall_section_icon = DashIconify(icon="charm:square-cross", style={"marginRight": 5})
 
 color_first_section = "darkturquoise"
 color_second_section = "teal"
@@ -323,18 +325,18 @@ card_carac_swimmer_section = dbc.Card(
 ####################### Layout ######################
 layout = dbc.Container([
     dbc.Row([
-        dbc.Col([
-            html.H2(children='')
-        ], width={"size": 1, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
+        # dbc.Col([
+        #     html.H2(children='')
+        # ], width={"size": 1, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
         
         dbc.Col(
-                html.H1(children='Parcourir les données par section'),
-                width={"size": 'auto', "offset": 0}, style={"fontSize": 30, "textAlign": 'center'}
+                html.H1([DashIconify(icon="ri:pin-distance-fill",style={"marginRight": 30}),'Parcourir les données par section']),
+                width={"size": 'auto', "offset": 1}, style={"fontSize": 30, "textAlign": 'center'}
             ),
         
-        dbc.Col([
-            html.H2(children='')
-        ], width={"size": 1, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
+        # dbc.Col([
+        #     html.H2(children='')
+        # ], width={"size": 1, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
     ]),
     
     dbc.Row([
@@ -366,7 +368,7 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             dbc.Button(
-            [reset_section_icon, "Actualiser "], id="reset-section-button", className="me-2", n_clicks=0, style={'background-color': color_first_section}
+            [reset_section_icon, "Actualiser "], id="reset-section-button", className="me-2", n_clicks=0, style={'background-color': "black"}
             ),
         ],  width={"size": 'auto', "offset": 5})
     ]),
@@ -411,14 +413,24 @@ layout = dbc.Container([
     html.Br(),
     
     dbc.Row([
+         dbc.Col([
+            dbc.Button(
+            [selectall_section_icon, "Tout sélectionner "], id="selectall-section-button", className="me-2", n_clicks=0, style={'background-color': 'black'}
+            ),
+        ],  width={"size": '2', "offset": 0}),
         dbc.Col([
-            dbc.Button([csv_section_icon, "Télécharger la base de données sous format .csv"], id="btn_csv_section", style={'background-color': color_first_section}),
-            dcc.Download(id="download-dataframe-section-csv"),
-        ], width={"size": 'auto'}),
+            dbc.Button(
+            [deselectall_section_icon, "Tout désélectionner"], id="deselectall-section-button", className="me-2", n_clicks=0, style={'background-color': 'black'}
+            ),
+        ],  width={"size": '2', "offset": 0}),
         dbc.Col([
-            dbc.Button([excel_section_icon, "Télécharger la base de données sous format .xlsx"], id="btn_excel_section", style={'background-color': color_first_section}),
+            dbc.Button([csv_section_icon, "Télécharger sous format .csv"], id="btn_csv_section", style={'background-color': color_first_section}),
             dcc.Download(id="download-dataframe-section-csv"),
-        ],  width={"size": 'auto', "offset": 0}),
+        ], width={"size": '3', "offset": 1}),
+        dbc.Col([
+            dbc.Button([excel_section_icon, "Télécharger sous format .xlsx"], id="btn_excel_section", style={'background-color': color_first_section}),
+            dcc.Download(id="download-dataframe-section-csv"),
+        ],  width={"size": '3', "offset": 0}),
     ]),
     
     html.Br(),
@@ -426,7 +438,7 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             dbc.Button(
-            [graph_section_icon, "Mettre à jour le graphique"], id="reset-graph-section-button", className="me-2", n_clicks=0, style={'background-color': color_first_section}
+            [graph_section_icon, "Mettre à jour le graphique"], id="reset-graph-section-button", className="me-2", n_clicks=0, style={'background-color': "black"}
             ),
         ],  width={"size": 'auto', "offset": 4})
     ]),
@@ -462,7 +474,7 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             dbc.Button(
-            [reset_section_icon, "Actualiser "], id="reset-25m-button", className="me-2", n_clicks=0, style={'background-color': color_second_section}
+            [reset_section_icon, "Actualiser "], id="reset-25m-button", className="me-2", n_clicks=0, style={'background-color': "black"}
             ),
         ],  width={"size": 'auto', "offset": 5})
     ]),
@@ -511,13 +523,23 @@ layout = dbc.Container([
     
     dbc.Row([
         dbc.Col([
-            dbc.Button([csv_section_icon, "Télécharger la base de données sous format .csv"], id="btn_csv_25m", style={'background-color': color_second_section}),
-            dcc.Download(id="download-dataframe-25m-csv"),
-        ], width={"size": 'auto'}),
+            dbc.Button(
+            [selectall_section_icon, "Tout sélectionner "], id="selectall-25m-button", className="me-2", n_clicks=0, style={'background-color': 'black'}
+            ),
+        ],  width={"size": '2', "offset": 0}),
         dbc.Col([
-            dbc.Button([excel_section_icon, "Télécharger la base de données sous format .xlsx"], id="btn_excel_25m", style={'background-color': color_second_section}),
+            dbc.Button(
+            [deselectall_section_icon, "Tout désélectionner"], id="deselectall-25m-button", className="me-2", n_clicks=0, style={'background-color': 'black'}
+            ),
+        ],  width={"size": '2', "offset": 0}),
+        dbc.Col([
+            dbc.Button([csv_section_icon, "Télécharger sous format .csv"], id="btn_csv_25m", style={'background-color': color_second_section}),
             dcc.Download(id="download-dataframe-25m-csv"),
-        ],  width={"size": 'auto', "offset": 0})
+        ], width={"size": '3', "offset": 1}),
+        dbc.Col([
+            dbc.Button([excel_section_icon, "Télécharger sous format .xlsx"], id="btn_excel_25m", style={'background-color': color_second_section}),
+            dcc.Download(id="download-dataframe-25m-csv"),
+        ],  width={"size": '3', "offset": 0})
     ]),
     
     html.Br(),
@@ -525,7 +547,7 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             dbc.Button(
-            [graph_section_icon, "Mettre à jour le graphique"], id="reset-graph-25m-button", className="me-2", n_clicks=0, style={'background-color': color_second_section}
+            [graph_section_icon, "Mettre à jour le graphique"], id="reset-graph-25m-button", className="me-2", n_clicks=0, style={'background-color': "black"}
             ),
         ],  width={"size": 'auto', "offset": 4})
     ]),
@@ -537,10 +559,7 @@ layout = dbc.Container([
             dcc.Graph(figure={}, id='graph-par-25m')
         ])
     ]),
-    
-    html.Br(),
-    
-    
+
 
 ])
 
@@ -646,17 +665,21 @@ def display_bdd_var_par_section(distance_c, style, competition, round, sexe, nom
                         dff = dff.drop(colonne, axis=1)
             
             
-            liste_col = ['id_analyse', 'nageur_sexe', 'competition_nom', 'distance_course', 'style_nage', 'round_name', 'TEMPS_SECTION', 'VITESSE', 'NB_CYCLE',
+            liste_col = ['id_analyse', 'competition_nom', 'distance_course', 'style_nage', 'round_name', 'TEMPS_SECTION', 'VITESSE', 'NB_CYCLE',
                             'FREQUENCE', 'TEMPO', 'AMPLITUDE']
             dff = dff.drop(columns = liste_col, axis=1)
 
             dff = dff.rename(columns={'nom_analyse': 'ID complet (distance, nage, épreuve, compétition)',
-                                    'nom_prenom' : 'Nom & prénom du nageur' })
+                                    'nom_prenom' : 'Nom & prénom du nageur', 'nageur_sexe': 'Sexe', 'mois_annee': 'Date', 
+                                    'temps_final': 'Temps final', 'temps_reaction': 'Temps réaction',
+                                    'temps_depart': 'Temps départ', 'temps_vol': 'Temps vol'})
             
+            liste_round = ['Temps vol', 'Temps réaction', 'Temps départ']
+            for col in liste_round:
+                dff[col] = dff[col].astype(float).round(2)
             dff_store = dff.copy()
             dff_store['index'] = dff_store.index
             dff_store = dff_store.to_dict('records')
-            #print(dff_store)
             
             return (warning, dff_store, dff_store)
         else:
@@ -681,19 +704,47 @@ def update_columns(data):
     # Si aucune donnée n'est disponible, utilisez une liste vide pour les colonnes
     return []
 
+
 @callback(
     Output('selected-rows', 'children'),
     [Input('bdd-section', 'selected_rows'),
-     Input('reset-graph-section-button', "n_clicks")],
+     Input('reset-graph-section-button', "n_clicks"),
+     Input('selectall-section-button', "n_clicks")],
+     Input('deselectall-section-button', "n_clicks"),
     [State('bdd-section', 'data')],
 )
-def display_selected_rows(selected_rows, btn_reset, data):
+def display_selected_rows(selected_rows, btn_reset, btn_selectall, data):
     if "reset-graph-section-button" in ctx.triggered[0]['prop_id']:
         if selected_rows:
             indices = [row['index'] for i, row in enumerate(data) if i in selected_rows]
             return f"Lignes sélectionnées : {indices}"
-        return "Aucune ligne sélectionnée"
-    return {}
+        
+        if "selectall-section-button" in ctx.triggered[0]['prop_id']:
+            all_rows = list(range(len(data)))
+            if "deselectall-section-button" in ctx.triggered[0]['prop_id']:
+                all_rows = []
+            return all_rows
+    else :
+        return {}
+
+
+@callback(
+    Output('bdd-section', "selected_rows"),
+    Input('selectall-section-button', "n_clicks"),
+    Input('deselectall-section-button', "n_clicks"),
+    State('bdd-section', 'data')
+)
+def select_all_rows(n_clicks_select, n_clicks_deselect, data):
+    all_rows = []
+    if n_clicks_select is not None and n_clicks_select > 0 and n_clicks_select > n_clicks_deselect:
+        # Sélectionnez toutes les lignes en utilisant les indices de ligne
+        all_rows = list(range(len(data)))
+        
+    if n_clicks_deselect is not None and n_clicks_deselect > 0 and n_clicks_deselect >= n_clicks_select:
+        all_rows = []
+    return all_rows
+    # # Si le bouton n'est pas encore cliqué, renvoyez une liste vide
+    # return []
 
 
 @callback(
@@ -713,12 +764,17 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                 # Vous pouvez maintenant utiliser l'indice pour effectuer des opérations spécifiques
                 # Par exemple, mettez à jour le graphique avec les données de la ligne sélectionnée
                 figure = go.Figure()
+                listes_colonnes = {}
+                for j, colonne in enumerate((data_stored.iloc[:,7:]).columns):
+                    listes_colonnes[j] = []
                 for i in range(len(selected_rows)):
                     selected_index = selected_rows[i]
                     row_variable = data_stored.iloc[selected_index,7:]
+                    temps_final = data_stored.loc[selected_index, 'Temps final']
                     row_variable = row_variable.drop('index', axis=0)
                     row_variable = pd.DataFrame(row_variable)
-                    #print(row_variable)
+                    for j in range(0,(row_variable.shape[1])-1):
+                        listes_colonnes[j].append(row_variable.iloc[i,j])
                     vecteur_float = row_variable.astype(float)
                     Y = np.array(vecteur_float).ravel()
                     index = pd.Index(row_variable.T.columns)
@@ -729,8 +785,8 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                         x = df_indiv['Distance'],
                         y = df_indiv[variable],
                         mode='lines',
-                        name=data_stored.loc[selected_rows[i], 'Nom & prénom du nageur'] + ', ' + data_stored.loc[selected_rows[i], 'ID complet (distance, nage, épreuve, compétition)'],
-                        hovertemplate='%{label}'
+                        name=str(temps_final) + ', ' + data_stored.loc[selected_rows[i], 'Nom & prénom du nageur'] + ', ' + data_stored.loc[selected_rows[i], 'ID complet (distance, nage, épreuve, compétition)'],
+                        hovertemplate=temps_final
                     ))
                     
                     figure.update_layout(
@@ -738,7 +794,8 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                     xaxis_title='Distance (en mètres)',
                     title=variable + ' en fonction de la distance parcourue',
                     #hovermode="x",
-                    legend={'itemsizing': 'constant'},
+                    legend={'itemsizing': 'constant', 'title_font': {'size': 12}, 'font': {'size': 10}},
+                    legend_itemclick="toggleothers",
                 )
                 
                 return figure
@@ -751,7 +808,7 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                 # Vous pouvez maintenant utiliser l'indice pour effectuer des opérations spécifiques
                 # Par exemple, mettez à jour le graphique avec les données de la ligne sélectionnée
                 figure = go.Figure()
-                row_variable = data_stored.iloc[:,7:]
+                row_variable = data_stored.iloc[:,8:]
                 row_variable = row_variable.drop('index', axis=1)
                 for col in row_variable.columns:
                     row_variable[col] = pd.to_datetime(row_variable[col].str.replace('.', ':') + '0', format='%M:%S:%f')
@@ -770,6 +827,7 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                 for i in range(len(selected_rows)):
                     selected_index = selected_rows[i]
                     row_variable = temp.iloc[selected_index,:]
+                    temps_final = data_stored.loc[selected_index, 'Temps final']
                     row_variable = pd.DataFrame(row_variable)
                     vecteur_float = row_variable.astype(float)
                     Y = np.array(vecteur_float).ravel()
@@ -782,16 +840,17 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                         x = df_indiv['Distance'],
                         y = df_indiv[variable],
                         mode='lines',
-                        name=data_stored.loc[selected_rows[i], 'Nom & prénom du nageur'] + ', ' + data_stored.loc[selected_rows[i], 'ID complet (distance, nage, épreuve, compétition)'],
-                        hovertemplate='%{label}'
+                        name=str(temps_final) + ', ' + data_stored.loc[selected_rows[i], 'Nom & prénom du nageur'] + ', ' + data_stored.loc[selected_rows[i], 'ID complet (distance, nage, épreuve, compétition)'],
+                        hovertemplate=temps_final
                     ))
                     
                     figure.update_layout(
-                    yaxis_title=variable,
-                    xaxis_title='Distance (en mètres)',
-                    title=variable + ' en fonction de la distance parcourue',
-                    #hovermode="x",
-                    legend={'itemsizing': 'constant'},
+                        yaxis_title=variable,
+                        xaxis_title='Distance (en mètres)',
+                        title=variable + ' en fonction de la distance parcourue',
+                        #hovermode="x",
+                        legend={'itemsizing': 'constant', 'title_font': {'size': 12}, 'font': {'size': 10}},
+                        legend_itemclick="toggleothers",
                 )
                 
                 return figure
@@ -874,12 +933,18 @@ def display_bdd_var_par_25(distance_c, style, competition, round, sexe, nom, var
                         dff = dff.drop(colonne, axis=1)
             
             
-            liste_col = ['id_analyse', 'nageur_sexe', 'competition_nom', 'distance_course', 'style_nage', 'round_name', 'TEMPS_SECTION', 'VITESSE', 'NB_CYCLE',
+            liste_col = ['id_analyse', 'competition_nom', 'distance_course', 'style_nage', 'round_name', 'TEMPS_SECTION', 'VITESSE', 'NB_CYCLE',
                             'FREQUENCE', 'TEMPO', 'AMPLITUDE']
             dff = dff.drop(columns = liste_col, axis=1)
 
             dff = dff.rename(columns={'nom_analyse': 'ID complet (distance, nage, épreuve, compétition)',
-                                    'nom_prenom' : 'Nom & prénom du nageur' })
+                                    'nom_prenom' : 'Nom & prénom du nageur', 'nageur_sexe': 'Sexe',
+                                    'mois_annee': 'Date', 'temps_final': 'Temps final', 'temps_reaction': 'Temps réaction',
+                                    'temps_vol': 'Temps vol', 'temps_depart': 'Temps départ'})
+            
+            liste_round = ['Temps départ', 'Temps réaction', 'Temps vol']
+            for col in liste_round:
+                dff[col] = dff[col].round(2)
             
             dff_store = dff.copy()
             dff_store = dff_store.to_dict('records')
@@ -929,16 +994,43 @@ def download_df_section_csv(btn_csv_clicks, btn_excel_clicks, df_stored):
 @callback(
     Output('selected-rows-25m', 'children'),
     [Input('bdd-var-par-25m', 'selected_rows'),
-     Input('reset-25m-button', "n_clicks")],
+     Input('reset-graph-25m-button', "n_clicks"),
+     Input('selectall-25m-button', "n_clicks")],
+     Input('deselectall-25m-button', "n_clicks"),
     [State('bdd-var-par-25m', 'data')],
 )
-def display_selected_rows(selected_rows, btn_reset, data):
-    if "reset-25m-button" in ctx.triggered[0]['prop_id']:
+def display_selected_rows(selected_rows, btn_reset, btn_selectall, data):
+    if "reset-graph-25m-button" in ctx.triggered[0]['prop_id']:
         if selected_rows:
             indices = [row['index'] for i, row in enumerate(data) if i in selected_rows]
             return f"Lignes sélectionnées : {indices}"
-        return "Aucune ligne sélectionnée"
-    return {}
+        
+        if "selectall-25m-button" in ctx.triggered[0]['prop_id']:
+            all_rows = list(range(len(data)))
+            if "deselectall-25m-button" in ctx.triggered[0]['prop_id']:
+                all_rows = []
+            return all_rows
+    else :
+        return {}
+
+
+@callback(
+    Output('bdd-var-par-25m', "selected_rows"),
+    Input('selectall-25m-button', "n_clicks"),
+    Input('deselectall-25m-button', "n_clicks"),
+    State('bdd-var-par-25m', 'data')
+)
+def select_all_rows(n_clicks_select, n_clicks_deselect, data):
+    all_rows = []
+    if n_clicks_select is not None and n_clicks_select > 0 and n_clicks_select > n_clicks_deselect:
+        # Sélectionnez toutes les lignes en utilisant les indices de ligne
+        all_rows = list(range(len(data)))
+        
+    if n_clicks_deselect is not None and n_clicks_deselect > 0 and n_clicks_deselect >= n_clicks_select:
+        all_rows = []
+    return all_rows
+    # # Si le bouton n'est pas encore cliqué, renvoyez une liste vide
+    # return []
 
 
 @callback(
@@ -960,7 +1052,8 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                 figure = go.Figure()
                 for i in range(len(selected_rows)):
                     selected_index = selected_rows[i]
-                    row_variable = data_stored.iloc[selected_index,7:]
+                    row_variable = data_stored.iloc[selected_index,8:]
+                    temps_final = data_stored.loc[selected_index, 'Temps final']
                     row_variable = pd.DataFrame(row_variable)
                     vecteur_float = row_variable.astype(float)
                     Y = np.array(vecteur_float).ravel()
@@ -972,17 +1065,18 @@ def update_graph(variable, data_stored, selected_rows, btn_reset_clicks):
                         x = df_indiv['Distance'],
                         y = df_indiv[variable],
                         mode='lines',
-                        name=data_stored.loc[selected_rows[i], 'Nom & prénom du nageur'] + ', ' + data_stored.loc[selected_rows[i], 'ID complet (distance, nage, épreuve, compétition)'],
-                        hovertemplate='%{label}'
+                        name=str(temps_final) + ', ' + data_stored.loc[selected_rows[i], 'Nom & prénom du nageur'] + ', ' + data_stored.loc[selected_rows[i], 'ID complet (distance, nage, épreuve, compétition)'],
+                        hovertemplate=temps_final
                     ))
                     
                     figure.update_layout(
-                    yaxis_title=variable,
-                    xaxis_title='Distance (en mètres)',
-                    title=variable + ' en fonction de la distance parcourue',
-                    #hovermode="x",
-                    legend={'itemsizing': 'constant'},
-                )
+                        yaxis_title=variable,
+                        xaxis_title='Distance (en mètres)',
+                        title=variable + ' en fonction de la distance parcourue',
+                        #hovermode="x",
+                        legend={'itemsizing': 'constant', 'title_font': {'size': 12}, 'font': {'size': 10}},
+                        legend_itemclick="toggleothers",
+                    )
                 
                 return figure
             else :

@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 
-dash.register_page(__name__)
+dash.register_page(__name__, name=[DashIconify(icon="wpf:statistics", style={"marginRight": 8}), "Analyse des parties nagées"])
 
 ###################### Pré-traitement des données #########################
 df = pd.read_csv("data/Freq_amp_base_entiere_date.csv", dtype = {'id_analyse':int, 'nom_analyse':str, 'nom_prenom':str, 'nageur_sexe':str, 'competition_nom':str, 'mois_annee':str, 'date':str, 'distance_course':str, 'round':str, 'style_nage':str, 'temps_final':float, 'id_cycle':float, 'temps':float, 'distance':float, 'frequence_instantanee':float, 'amplitude_instantanee':float})
@@ -42,7 +42,7 @@ def clean_data(data,value_freq_min=35):
 kernel = RBF(length_scale=40, length_scale_bounds=(40, 50)) + WhiteKernel(noise_level=9.0, noise_level_bounds=(1e-5, 1e+1))
 
 # Fonction compute_points_GP et application aux données
-def compute_points_GP(data, variable, kernel=kernel):
+def compute_points_GP(data, variable, distance, kernel=kernel):
     sub_dataframes = {}
     df_points_pentes = pd.DataFrame()
     X_new = np.array([])  # Initialisation de X_new avec une valeur par défaut
@@ -61,7 +61,7 @@ def compute_points_GP(data, variable, kernel=kernel):
         gp.fit(X.reshape(-1, 1), y)
 
         # Prédiction sur un nouvel ensemble de données
-        X_new = np.linspace(14, 100, 100)
+        X_new = np.linspace(14, distance, 100)
         y_pred, y_std = gp.predict(X_new.reshape(-1, 1), return_std=True)
 
         new_row = pd.Series(y_pred)
@@ -334,18 +334,18 @@ card_warning = dbc.Card(
 
 layout = dbc.Container([
     dbc.Row([
-        dbc.Col([
-            html.H2(children='')
-        ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
+        # dbc.Col([
+        #     html.H2(children='')
+        # ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
         
         dbc.Col(
-                html.H1(children='Analyse des parties nagées'),
-                width={"size": 'auto', "offset": 0}, style={"fontSize": 30, "textAlign": 'center', "fontWeight": "bold"},
+                html.H1([DashIconify(icon='wpf:statistics', style={"marginRight": 30}),'Analyse des parties nagées']),
+                width={"size": 'auto', "offset": 2}, style={"fontSize": 30, "textAlign": 'center', "fontWeight": "bold"},
             ),
         
-        dbc.Col([
-            html.H2(children='')
-        ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
+        # dbc.Col([
+        #     html.H2(children='')
+        # ], width={"size": 2, "offset": 0}, style={"fontSize": 30, "backgroundColor": "black"}),
         
     ]),
     
@@ -493,7 +493,7 @@ def update_distance(nom_prenom, nage):
     Input('nage-dropdown',"value"),
     Input('distance-dropdown',"value")
 )
-def update_distance(nom_prenom, nage, distance):
+def update_date(nom_prenom, nage, distance):
     dff = df.copy()
     if nom_prenom:
         dff = dff.loc[dff.nom_prenom == nom_prenom]
@@ -502,6 +502,7 @@ def update_distance(nom_prenom, nage, distance):
     if distance:
         dff = dff.loc[dff.distance_course == distance]
     return [{'label': i, 'value': i} for i in sorted(dff.date.unique())]
+
 
 
 @callback(
@@ -533,7 +534,7 @@ def plot_boxplot(nageur,nage,distance,date,variable, btn_reset_clicks):
         if distance:
             dff = dff.loc[dff.distance_course == distance]
         if date:
-            dff = dff.loc[dff.mois_annee.isin(date)]
+            dff = dff.loc[dff.mois_annee > date]
         dff = clean_data(dff).reset_index(drop=True)
         
         if len(dff.nom_analyse.unique()) < 30:
@@ -541,9 +542,9 @@ def plot_boxplot(nageur,nage,distance,date,variable, btn_reset_clicks):
         
         if len(dff.nom_analyse.unique()) > 6:
             if variable == '  Fréquence':
-                dff_points_gp, X_echantillon = compute_points_GP(dff,variable='frequence_instantanee')
+                dff_points_gp, X_echantillon = compute_points_GP(dff,variable='frequence_instantanee',distance=distance)
             if variable == '  Amplitude':
-                dff_points_gp, X_echantillon = compute_points_GP(dff,variable='amplitude_instantanee')
+                dff_points_gp, X_echantillon = compute_points_GP(dff,variable='amplitude_instantanee',distance=distance)
             
             #dff_points_gp, X_echantillon = compute_points_GP(dff,variable='frequence_instantanee')
             moyenne_dataframe_points = dff_points_gp.mean().mean()
@@ -568,15 +569,17 @@ def plot_boxplot(nageur,nage,distance,date,variable, btn_reset_clicks):
             n_clust = 6   
             clustering = kmeans_pentes_points_inflexion(dff_points_gp,dff_pentes,n_clust,X_echantillon,temps,courses,title='fréquence')
             clustering['Course'] = courses
+            
+            #clustering['Temps_format'] = clustering['Temps'].apply(lambda x: f"{int(x // 60):02d}:{int(x % 60):02d}.{int((x % 1) * 100):02d}")
             df_test = clustering[['Clusters','Temps']]
             clustering = clustering.to_dict('records')
             fig = px.box(df_test, x='Clusters',y='Temps', color='Clusters',
+                         labels = {'Temps': 'Temps (en secondes)'},
                         category_orders={'Clusters': sorted(df_test['Clusters'].unique())},
                         color_discrete_sequence=px.colors.qualitative.Dark2
                         )
-            fig.update_layout(
-                title = "Boxplot de la performance en fonction du cluster (variable :" + variable + ")",
-            )
+            
+
     return clustering, X_echantillon, fig, warning
         
 
@@ -595,16 +598,18 @@ def plot_fig1(clustering_df, X_echantillon, variable):
         df_clust = df.loc[df.Clusters == 0].copy().reset_index(drop=True)
         df_clust = df_clust.sort_values(by = 'Temps', ascending=True)
         df_clust['Temps'] = df_clust['Temps'].apply(lambda x: '{:02d}:{:05.2f}'.format(int(float(x) // 60), float(x) % 60))
+        hover_templates = []
         for i in range(df_clust.shape[0]):
             liste_points_GP = df_clust.iloc[i,:100]
             df_race = pd.DataFrame({'X_echantillon':X_echantillon,
                                     'Points_GP':liste_points_GP.to_numpy().flatten()})
+            hover_templates.append(df_clust.loc[i, 'Temps'])
             fig_clust.add_trace(go.Scatter(
                 x=df_race['X_echantillon'],
                 y=df_race['Points_GP'],
                 mode='lines',
-                name=str(df_clust.loc[i, 'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
-                hovertemplate='%{label}'
+                name=str(df_clust.loc[i,'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
+                hovertemplate=hover_templates[i]
             ))
 
         fig_clust.update_layout(
@@ -637,16 +642,18 @@ def plot_fig1(clustering_df, X_echantillon, variable):
         df_clust = df.loc[df.Clusters == 1].copy().reset_index(drop=True)
         df_clust = df_clust.sort_values(by = 'Temps', ascending=True)
         df_clust['Temps'] = df_clust['Temps'].apply(lambda x: '{:02d}:{:05.2f}'.format(int(float(x) // 60), float(x) % 60))
+        hover_templates = []
         for i in range(df_clust.shape[0]):
             liste_points_GP = df_clust.iloc[i,:100]
             df_race = pd.DataFrame({'X_echantillon':X_echantillon,
                                     'Points_GP':liste_points_GP.to_numpy().flatten()})
+            hover_templates.append(df_clust.loc[i, 'Temps'])
             fig_clust.add_trace(go.Scatter(
                 x=df_race['X_echantillon'],
                 y=df_race['Points_GP'],
                 mode='lines',
-                name=str(df_clust.loc[i, 'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
-                hovertemplate='%{label}'
+                name=str(df_clust.loc[i,'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
+                hovertemplate=hover_templates[i]
             ))
 
         fig_clust.update_layout(
@@ -678,16 +685,18 @@ def plot_fig1(clustering_df, X_echantillon,variable):
         df_clust = df.loc[df.Clusters == 2].copy().reset_index(drop=True)
         df_clust = df_clust.sort_values(by = 'Temps', ascending=True)
         df_clust['Temps'] = df_clust['Temps'].apply(lambda x: '{:02d}:{:05.2f}'.format(int(float(x) // 60), float(x) % 60))
+        hover_templates=[]
         for i in range(df_clust.shape[0]):
             liste_points_GP = df_clust.iloc[i,:100]
             df_race = pd.DataFrame({'X_echantillon':X_echantillon,
                                     'Points_GP':liste_points_GP.to_numpy().flatten()})
+            hover_templates.append(df_clust.loc[i, 'Temps'])
             fig_clust.add_trace(go.Scatter(
                 x=df_race['X_echantillon'],
                 y=df_race['Points_GP'],
                 mode='lines',
-                name=str(df_clust.loc[i, 'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
-                hovertemplate='%{label}'
+                name=str(df_clust.loc[i,'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
+                hovertemplate=hover_templates[i]
             ))
 
         fig_clust.update_layout(
@@ -717,16 +726,18 @@ def plot_fig1(clustering_df, X_echantillon, variable):
         df_clust = df.loc[df.Clusters == 3].copy().reset_index(drop=True)
         df_clust = df_clust.sort_values(by = 'Temps', ascending=True)
         df_clust['Temps'] = df_clust['Temps'].apply(lambda x: '{:02d}:{:05.2f}'.format(int(float(x) // 60), float(x) % 60))
+        hover_templates = []
         for i in range(df_clust.shape[0]):
             liste_points_GP = df_clust.iloc[i,:100]
             df_race = pd.DataFrame({'X_echantillon':X_echantillon,
                                     'Points_GP':liste_points_GP.to_numpy().flatten()})
+            hover_templates.append(df_clust.loc[i, 'Temps'])
             fig_clust.add_trace(go.Scatter(
                 x=df_race['X_echantillon'],
                 y=df_race['Points_GP'],
                 mode='lines',
-                name=str(df_clust.loc[i, 'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
-                hovertemplate='%{label}'
+                name=str(df_clust.loc[i,'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
+                hovertemplate=hover_templates[i]
             ))
 
         fig_clust.update_layout(
@@ -756,16 +767,18 @@ def plot_fig1(clustering_df, X_echantillon, variable):
         df_clust = df.loc[df.Clusters == 4].copy().reset_index(drop=True)
         df_clust = df_clust.sort_values(by = 'Temps', ascending=True)
         df_clust['Temps'] = df_clust['Temps'].apply(lambda x: '{:02d}:{:05.2f}'.format(int(float(x) // 60), float(x) % 60))
+        hover_templates = []
         for i in range(df_clust.shape[0]):
             liste_points_GP = df_clust.iloc[i,:100]
             df_race = pd.DataFrame({'X_echantillon':X_echantillon,
                                     'Points_GP':liste_points_GP.to_numpy().flatten()})
+            hover_templates.append(df_clust.loc[i, 'Temps'])
             fig_clust.add_trace(go.Scatter(
                 x=df_race['X_echantillon'],
                 y=df_race['Points_GP'],
                 mode='lines',
-                name=str(df_clust.loc[i, 'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
-                hovertemplate='%{label}'
+                name=str(df_clust.loc[i,'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
+                hovertemplate=hover_templates[i]
             ))
 
         fig_clust.update_layout(
@@ -796,16 +809,18 @@ def plot_fig1(clustering_df, X_echantillon, variable):
         df_clust = df.loc[df.Clusters == 5].copy().reset_index(drop=True)
         df_clust = df_clust.sort_values(by = 'Temps', ascending=True)
         df_clust['Temps'] = df_clust['Temps'].apply(lambda x: '{:02d}:{:05.2f}'.format(int(float(x) // 60), float(x) % 60))
+        hover_templates = []
         for i in range(df_clust.shape[0]):
             liste_points_GP = df_clust.iloc[i,:100]
             df_race = pd.DataFrame({'X_echantillon':X_echantillon,
                                     'Points_GP':liste_points_GP.to_numpy().flatten()})
+            hover_templates.append(df_clust.loc[i, 'Temps'])
             fig_clust.add_trace(go.Scatter(
                 x=df_race['X_echantillon'],
                 y=df_race['Points_GP'],
                 mode='lines',
-                name=str(df_clust.loc[i, 'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
-                hovertemplate='%{label}'
+                name=str(df_clust.loc[i,'Temps']) + ' - ' + df_clust.loc[i, 'Course'],
+                hovertemplate=hover_templates[i]
             ))
 
         fig_clust.update_layout(
